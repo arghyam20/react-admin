@@ -15,9 +15,12 @@ import {
   Menu as MenuIcon,
   Logout,
   AdminPanelSettings,
+  PersonOutline,
 } from '@mui/icons-material';
-import { useAuthStore } from '@/store/authStore';
+import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '@/store';
 import { useLogout } from '@/features/auth/hooks/useAuth';
+import { getStorageUrl } from '@/utils/formatters';
 
 interface HeaderProps {
   onMobileDrawerToggle: () => void;
@@ -25,8 +28,9 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onMobileDrawerToggle, drawerWidth }) => {
-  const user = useAuthStore((state) => state.user);
+  const user = useAppSelector((state) => state.auth.user);
   const { mutate: logout, isPending } = useLogout();
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -37,6 +41,11 @@ export const Header: React.FC<HeaderProps> = ({ onMobileDrawerToggle, drawerWidt
     setAnchorEl(null);
   };
 
+  const handleGoToProfile = () => {
+    handleCloseMenu();
+    navigate('/profile');
+  };
+
   const handleLogout = () => {
     handleCloseMenu();
     logout();
@@ -44,6 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ onMobileDrawerToggle, drawerWidt
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'A';
   const roleName = user?.roles?.[0]?.name || 'Admin';
+  const avatarUrl = getStorageUrl(user?.avatar);
 
   return (
     <AppBar
@@ -89,6 +99,7 @@ export const Header: React.FC<HeaderProps> = ({ onMobileDrawerToggle, drawerWidt
             }}
           >
             <Avatar
+              src={avatarUrl || undefined}
               sx={{
                 width: 36,
                 height: 36,
@@ -128,6 +139,12 @@ export const Header: React.FC<HeaderProps> = ({ onMobileDrawerToggle, drawerWidt
               </Typography>
             </Box>
             <Divider />
+            <MenuItem onClick={handleGoToProfile} sx={{ py: 1 }}>
+              <ListItemIcon>
+                <PersonOutline fontSize="small" />
+              </ListItemIcon>
+              <Typography variant="body2">Profile & Security</Typography>
+            </MenuItem>
             <MenuItem disabled sx={{ py: 1 }}>
               <ListItemIcon>
                 <AdminPanelSettings fontSize="small" />

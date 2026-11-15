@@ -4,6 +4,7 @@ export const API_ENDPOINTS = {
     logout: '/api/auth/logout',
     me: '/api/auth/me',
     profile: '/api/auth/profile',
+    changePassword: '/api/auth/change-password',
     refresh: '/api/auth/refresh',
   },
   users: {

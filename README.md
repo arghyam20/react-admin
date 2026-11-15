@@ -34,7 +34,7 @@ A modern, responsive, high-performance Admin Panel built with the latest stable 
 | **Server State** | TanStack Query | `^5.60.5` | Asynchronous data fetching, caching, and cache invalidation |
 | **Form Management** | React Hook Form | `^7.53.2` | High-performance form state without unnecessary re-renders |
 | **Form Validation** | Zod | `^3.23.8` | Schema declaration and validation |
-| **Global State** | Zustand | `^5.0.1` | Lightweight, unopinionated auth state management |
+| **Global State** | Redux Toolkit | `^2.3.0` | Predictable global state management (`@reduxjs/toolkit`, `react-redux`) |
 | **Notifications** | React Toastify | `^10.0.6` | Toast feedback for API success/error states |
 | **Date Handling** | Day.js | `^1.11.13` | Lightweight date formatting and relative timestamps |
 
@@ -44,12 +44,14 @@ A modern, responsive, high-performance Admin Panel built with the latest stable 
 
 The panel strictly implements only the requested modules with complete CRUD capabilities:
 
-### 1. Authentication
+### 1. Authentication & Profile Security
 - **Admin Login**: Authenticate against `POST /api/auth/login` using email and password.
-- **Session Persistence**: JWT access token stored in `localStorage` and synchronized with Zustand.
+- **Session Persistence**: JWT access token stored in `localStorage` and synchronized with Redux Toolkit store.
 - **Profile Fetching**: Automatic profile retrieval via `GET /api/auth/me`.
+- **Edit Profile**: Update admin display name, contact email, phone number, and avatar image (`PUT /api/auth/profile`).
+- **Change Password**: Dedicated security form with current password verification and new password confirmation (`POST /api/auth/change-password`).
 - **Request Interceptor**: Centralized Axios interceptor automatically attaches `Authorization: Bearer {token}` to outgoing API calls.
-- **Unauthorized Interceptor**: Intercepts `401 Unauthorized` responses, clears invalid tokens, and safely redirects to `/login`.
+- **Unauthorized Interceptor**: Intercepts `401 Unauthorized` responses, dispatches `logout()` in Redux, and safely redirects to `/login`.
 - **Route Guards**:
   - `ProtectedRoute`: Prevents unauthenticated users from accessing protected admin pages.
   - `GuestRoute`: Redirects logged-in users away from the login screen to the dashboard.

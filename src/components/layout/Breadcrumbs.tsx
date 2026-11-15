@@ -7,6 +7,7 @@ const routeNames: Record<string, string> = {
   users: 'Users',
   categories: 'Categories',
   blogs: 'Blogs',
+  profile: 'Profile & Security',
   new: 'Create',
   edit: 'Edit',
 };

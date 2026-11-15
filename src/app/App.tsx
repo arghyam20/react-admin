@@ -2,18 +2,23 @@ import React, { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import { Providers } from './providers';
-import { useAuthStore } from '@/store/authStore';
+import { useAppDispatch } from '@/store';
+import { initializeAuth } from '@/store/slices/authSlice';
 
-export const App: React.FC = () => {
-  const initializeAuth = useAuthStore((state) => state.initialize);
+const AppContent: React.FC = () => {
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    initializeAuth();
-  }, [initializeAuth]);
+    dispatch(initializeAuth());
+  }, [dispatch]);
 
+  return <RouterProvider router={router} />;
+};
+
+export const App: React.FC = () => {
   return (
     <Providers>
-      <RouterProvider router={router} />
+      <AppContent />
     </Providers>
   );
 };

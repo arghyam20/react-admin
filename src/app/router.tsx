@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
+import { useAppSelector } from '@/store';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 
@@ -10,6 +10,7 @@ const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPag
 const UsersListPage = lazy(() => import('@/features/users/pages/UsersListPage'));
 const CategoriesListPage = lazy(() => import('@/features/categories/pages/CategoriesListPage'));
 const BlogsListPage = lazy(() => import('@/features/blogs/pages/BlogsListPage'));
+const ProfilePage = lazy(() => import('@/features/auth/pages/ProfilePage'));
 
 // Protected route: Redirects unauthenticated users to /login
 interface RouteWrapperProps {
@@ -17,7 +18,7 @@ interface RouteWrapperProps {
 }
 
 const ProtectedRoute: React.FC<RouteWrapperProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
   const location = useLocation();
 
   if (isLoading) {
@@ -33,7 +34,7 @@ const ProtectedRoute: React.FC<RouteWrapperProps> = ({ children }) => {
 
 // Guest route: Redirects authenticated users away from /login
 const GuestRoute: React.FC<RouteWrapperProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
 
   if (isLoading) {
     return <LoadingSpinner minHeight="100vh" message="Loading..." />;
@@ -100,6 +101,14 @@ export const router = createBrowserRouter([
         element: (
           <SuspenseWrapper>
             <BlogsListPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: 'profile',
+        element: (
+          <SuspenseWrapper>
+            <ProfilePage />
           </SuspenseWrapper>
         ),
       },

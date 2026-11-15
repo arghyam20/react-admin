@@ -17,7 +17,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom', 'zustand'],
+          vendor: ['react', 'react-dom', 'react-router-dom', '@reduxjs/toolkit', 'react-redux'],
           mui: ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
           tanstack: ['@tanstack/react-query'],
         },

@@ -1,5 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL, AUTH_TOKEN_KEY } from '@/utils/constants';
+import store from '@/store';
+import { logout } from '@/store/slices/authSlice';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -36,9 +38,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       const isLoginRequest = error.config?.url?.includes('/api/auth/login');
       if (!isLoginRequest) {
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        localStorage.removeItem('auth_user');
-        localStorage.removeItem('refresh_token');
+        store.dispatch(logout());
 
         // Only redirect if not already on the login page
         if (window.location.pathname !== '/login') {
