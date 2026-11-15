@@ -41,13 +41,12 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
   const { data: rolesData } = useRolesList();
 
   const isSubmitting = isCreating || isUpdating;
+  const roles = rolesData?.data || [];
 
   const {
-    register,
     handleSubmit,
     reset,
     control,
-    formState: { errors },
   } = useForm<CreateUserFormData>({
     resolver: zodResolver(isEditing ? updateUserSchema : createUserSchema),
     defaultValues: {
@@ -61,26 +60,36 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
   });
 
   useEffect(() => {
-    if (userToEdit) {
-      reset({
-        name: userToEdit.name,
-        email: userToEdit.email,
-        password: '',
-        phone: userToEdit.phone || '',
-        status: userToEdit.status,
-        role_ids: userToEdit.roles?.map((r) => r.level ? Number(r.level) : 1) || [], // will be mapped from role list
-      });
-    } else {
-      reset({
-        name: '',
-        email: '',
-        password: '',
-        phone: '',
-        status: 'active',
-        role_ids: [],
-      });
+    if (open) {
+      if (userToEdit) {
+        // Map user's roles to role IDs from available roles
+        const initialRoleIds = (userToEdit.roles || [])
+          .map((r) => {
+            const match = roles.find((role) => role.slug === r.slug || role.uuid === r.uuid);
+            return match ? match.id : (r as { id?: number }).id;
+          })
+          .filter((id): id is number => typeof id === 'number');
+
+        reset({
+          name: userToEdit.name || '',
+          email: userToEdit.email || '',
+          password: '',
+          phone: userToEdit.phone || '',
+          status: userToEdit.status || 'active',
+          role_ids: initialRoleIds,
+        });
+      } else {
+        reset({
+          name: '',
+          email: '',
+          password: '',
+          phone: '',
+          status: 'active',
+          role_ids: [],
+        });
+      }
     }
-  }, [userToEdit, reset, open]);
+  }, [userToEdit, reset, open, roles]);
 
   const onSubmit = (data: CreateUserFormData) => {
     const payload = { ...data };
@@ -98,8 +107,6 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
     }
   };
 
-  const roles = rolesData?.data || [];
-
   return (
     <Dialog open={open} onClose={isSubmitting ? undefined : onClose} maxWidth="sm" fullWidth>
       <DialogTitle fontWeight={600}>
@@ -109,55 +116,84 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
         <DialogContent dividers>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <FormTextField
-                label="Full Name *"
-                {...register('name')}
-                errorMessage={errors.name?.message}
-                disabled={isSubmitting}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <FormTextField
-                label="Email Address *"
-                type="email"
-                {...register('email')}
-                errorMessage={errors.email?.message}
-                disabled={isSubmitting}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <FormTextField
-                label={isEditing ? 'Password (Leave empty to keep unchanged)' : 'Password *'}
-                type="password"
-                {...register('password')}
-                errorMessage={errors.password?.message}
-                disabled={isSubmitting}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormTextField
-                label="Phone Number"
-                {...register('phone')}
-                errorMessage={errors.phone?.message}
-                disabled={isSubmitting}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
               <Controller
-                name="status"
+                name="name"
                 control={control}
-                render={({ field }) => (
-                  <FormSelect
-                    label="Status *"
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={USER_STATUSES.map((s) => ({ label: s.label, value: s.value }))}
-                    errorMessage={errors.status?.message}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label="Full Name *"
+                    {...field}
+                    errorMessage={fieldState.error?.message}
                     disabled={isSubmitting}
                   />
                 )}
               />
             </Grid>
+
+            <Grid item xs={12}>
+              <Controller
+                name="email"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label="Email Address *"
+                    type="email"
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Controller
+                name="password"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label={isEditing ? 'Password (Leave empty to keep unchanged)' : 'Password *'}
+                    type="password"
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="phone"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label="Phone Number"
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="status"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormSelect
+                    label="Status *"
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={USER_STATUSES.map((s) => ({ label: s.label, value: s.value }))}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+            </Grid>
+
             {roles.length > 0 && (
               <Grid item xs={12}>
                 <Controller

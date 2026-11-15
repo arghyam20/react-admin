@@ -1,24 +1,26 @@
-import React from 'react';
+import { forwardRef } from 'react';
 import { TextField, TextFieldProps } from '@mui/material';
 
-interface FormTextFieldProps extends Omit<TextFieldProps, 'error'> {
+export interface FormTextFieldProps extends Omit<TextFieldProps, 'error'> {
   errorMessage?: string;
 }
 
-export const FormTextField: React.FC<FormTextFieldProps> = ({
-  errorMessage,
-  helperText,
-  ...props
-}) => {
-  return (
-    <TextField
-      fullWidth
-      variant="outlined"
-      error={!!errorMessage}
-      helperText={errorMessage || helperText}
-      {...props}
-    />
-  );
-};
+export const FormTextField = forwardRef<HTMLInputElement, FormTextFieldProps>(
+  ({ errorMessage, helperText, value, ...props }, ref) => {
+    return (
+      <TextField
+        fullWidth
+        variant="outlined"
+        error={!!errorMessage}
+        helperText={errorMessage || helperText}
+        inputRef={ref}
+        value={value ?? ''}
+        {...props}
+      />
+    );
+  }
+);
+
+FormTextField.displayName = 'FormTextField';
 
 export default FormTextField;

@@ -48,11 +48,9 @@ export const BlogFormDialog: React.FC<BlogFormDialogProps> = ({
   const isSubmitting = isCreating || isUpdating;
 
   const {
-    register,
     handleSubmit,
     reset,
     control,
-    formState: { errors },
   } = useForm<BlogFormData>({
     resolver: zodResolver(blogSchema),
     defaultValues: {
@@ -71,36 +69,37 @@ export const BlogFormDialog: React.FC<BlogFormDialogProps> = ({
   });
 
   useEffect(() => {
-    if (blogToEdit) {
-      reset({
-        title: blogToEdit.title,
-        slug: blogToEdit.slug,
-        category_id: blogToEdit.category_id,
-        content: blogToEdit.content,
-        excerpt: blogToEdit.excerpt || '',
-        seo_title: blogToEdit.seo_title || '',
-        seo_description: blogToEdit.seo_description || '',
-        seo_keywords: blogToEdit.seo_keywords || '',
-        status: blogToEdit.status,
-        is_featured: Boolean(blogToEdit.is_featured),
-        published_at: blogToEdit.published_at ? blogToEdit.published_at.slice(0, 10) : '',
-      });
-      setSelectedImage(null);
-    } else {
-      const firstCatId = categoriesData?.data?.[0]?.id ?? 1;
-      reset({
-        title: '',
-        slug: '',
-        category_id: firstCatId,
-        content: '',
-        excerpt: '',
-        seo_title: '',
-        seo_description: '',
-        seo_keywords: '',
-        status: 'draft',
-        is_featured: false,
-        published_at: '',
-      });
+    if (open) {
+      if (blogToEdit) {
+        reset({
+          title: blogToEdit.title || '',
+          slug: blogToEdit.slug || '',
+          category_id: Number(blogToEdit.category_id) || 1,
+          content: blogToEdit.content || '',
+          excerpt: blogToEdit.excerpt || '',
+          seo_title: blogToEdit.seo_title || '',
+          seo_description: blogToEdit.seo_description || '',
+          seo_keywords: blogToEdit.seo_keywords || '',
+          status: blogToEdit.status || 'draft',
+          is_featured: Boolean(blogToEdit.is_featured),
+          published_at: blogToEdit.published_at ? blogToEdit.published_at.slice(0, 10) : '',
+        });
+      } else {
+        const firstCatId = categoriesData?.data?.[0]?.id ?? 1;
+        reset({
+          title: '',
+          slug: '',
+          category_id: Number(firstCatId),
+          content: '',
+          excerpt: '',
+          seo_title: '',
+          seo_description: '',
+          seo_keywords: '',
+          status: 'draft',
+          is_featured: false,
+          published_at: '',
+        });
+      }
       setSelectedImage(null);
     }
   }, [blogToEdit, reset, open, categoriesData]);
@@ -134,20 +133,32 @@ export const BlogFormDialog: React.FC<BlogFormDialogProps> = ({
         <DialogContent dividers>
           <Grid container spacing={2.5}>
             <Grid item xs={12}>
-              <FormTextField
-                label="Post Title *"
-                {...register('title')}
-                errorMessage={errors.title?.message}
-                disabled={isSubmitting}
+              <Controller
+                name="title"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label="Post Title *"
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <FormTextField
-                label="Slug (Optional - auto-generated if left blank)"
-                {...register('slug')}
-                errorMessage={errors.slug?.message}
-                disabled={isSubmitting}
+              <Controller
+                name="slug"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label="Slug (Optional - auto-generated if left blank)"
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </Grid>
 
@@ -155,13 +166,13 @@ export const BlogFormDialog: React.FC<BlogFormDialogProps> = ({
               <Controller
                 name="category_id"
                 control={control}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormSelect
                     label="Category *"
                     value={field.value ?? ''}
                     onChange={(e) => field.onChange(Number(e.target.value))}
                     options={categoryOptions}
-                    errorMessage={errors.category_id?.message}
+                    errorMessage={fieldState.error?.message}
                     disabled={isSubmitting}
                   />
                 )}
@@ -172,13 +183,13 @@ export const BlogFormDialog: React.FC<BlogFormDialogProps> = ({
               <Controller
                 name="status"
                 control={control}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormSelect
                     label="Publication Status *"
                     value={field.value}
                     onChange={field.onChange}
                     options={BLOG_STATUSES.map((s) => ({ label: s.label, value: s.value }))}
-                    errorMessage={errors.status?.message}
+                    errorMessage={fieldState.error?.message}
                     disabled={isSubmitting}
                   />
                 )}
@@ -206,26 +217,38 @@ export const BlogFormDialog: React.FC<BlogFormDialogProps> = ({
             </Grid>
 
             <Grid item xs={12}>
-              <FormTextField
-                label="Content (HTML or Text) *"
-                multiline
-                rows={8}
-                placeholder="<p>Write your blog post content here...</p>"
-                {...register('content')}
-                errorMessage={errors.content?.message}
-                disabled={isSubmitting}
+              <Controller
+                name="content"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label="Content (HTML or Text) *"
+                    multiline
+                    rows={8}
+                    placeholder="<p>Write your blog post content here...</p>"
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </Grid>
 
             <Grid item xs={12}>
-              <FormTextField
-                label="Short Excerpt"
-                multiline
-                rows={2}
-                placeholder="Brief summary of the article..."
-                {...register('excerpt')}
-                errorMessage={errors.excerpt?.message}
-                disabled={isSubmitting}
+              <Controller
+                name="excerpt"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label="Short Excerpt"
+                    multiline
+                    rows={2}
+                    placeholder="Brief summary of the article..."
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </Grid>
 
@@ -247,26 +270,44 @@ export const BlogFormDialog: React.FC<BlogFormDialogProps> = ({
                 <AccordionDetails>
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
-                      <FormTextField
-                        label="SEO Meta Title"
-                        {...register('seo_title')}
-                        disabled={isSubmitting}
+                      <Controller
+                        name="seo_title"
+                        control={control}
+                        render={({ field }) => (
+                          <FormTextField
+                            label="SEO Meta Title"
+                            {...field}
+                            disabled={isSubmitting}
+                          />
+                        )}
                       />
                     </Grid>
                     <Grid item xs={12}>
-                      <FormTextField
-                        label="SEO Meta Description"
-                        multiline
-                        rows={2}
-                        {...register('seo_description')}
-                        disabled={isSubmitting}
+                      <Controller
+                        name="seo_description"
+                        control={control}
+                        render={({ field }) => (
+                          <FormTextField
+                            label="SEO Meta Description"
+                            multiline
+                            rows={2}
+                            {...field}
+                            disabled={isSubmitting}
+                          />
+                        )}
                       />
                     </Grid>
                     <Grid item xs={12}>
-                      <FormTextField
-                        label="SEO Keywords (comma-separated)"
-                        {...register('seo_keywords')}
-                        disabled={isSubmitting}
+                      <Controller
+                        name="seo_keywords"
+                        control={control}
+                        render={({ field }) => (
+                          <FormTextField
+                            label="SEO Keywords (comma-separated)"
+                            {...field}
+                            disabled={isSubmitting}
+                          />
+                        )}
                       />
                     </Grid>
                   </Grid>

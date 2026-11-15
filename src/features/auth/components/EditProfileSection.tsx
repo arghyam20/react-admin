@@ -9,7 +9,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Save } from '@mui/icons-material';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { profileSchema, ProfileFormData } from '../schemas/profileSchema';
 import { FormTextField } from '@/components/forms/FormTextField';
@@ -23,7 +23,7 @@ export const EditProfileSection: React.FC = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const {
-    register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -76,30 +76,51 @@ export const EditProfileSection: React.FC = () => {
             <Grid item xs={12} md={8}>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <FormTextField
-                    label="Full Name *"
-                    {...register('name')}
-                    errorMessage={errors.name?.message}
-                    disabled={isPending}
+                  <Controller
+                    name="name"
+                    control={control}
+                    render={({ field }) => (
+                      <FormTextField
+                        {...field}
+                        value={field.value ?? ''}
+                        label="Full Name *"
+                        errorMessage={errors.name?.message}
+                        disabled={isPending}
+                      />
+                    )}
                   />
                 </Grid>
 
                 <Grid item xs={12}>
-                  <FormTextField
-                    label="Email Address *"
-                    type="email"
-                    {...register('email')}
-                    errorMessage={errors.email?.message}
-                    disabled={isPending}
+                  <Controller
+                    name="email"
+                    control={control}
+                    render={({ field }) => (
+                      <FormTextField
+                        {...field}
+                        value={field.value ?? ''}
+                        label="Email Address *"
+                        type="email"
+                        errorMessage={errors.email?.message}
+                        disabled={isPending}
+                      />
+                    )}
                   />
                 </Grid>
 
                 <Grid item xs={12}>
-                  <FormTextField
-                    label="Phone Number"
-                    {...register('phone')}
-                    errorMessage={errors.phone?.message}
-                    disabled={isPending}
+                  <Controller
+                    name="phone"
+                    control={control}
+                    render={({ field }) => (
+                      <FormTextField
+                        {...field}
+                        value={field.value ?? ''}
+                        label="Phone Number"
+                        errorMessage={errors.phone?.message}
+                        disabled={isPending}
+                      />
+                    )}
                   />
                 </Grid>
 

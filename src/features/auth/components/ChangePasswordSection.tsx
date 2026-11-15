@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Visibility, VisibilityOff, LockReset, Key } from '@mui/icons-material';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { changePasswordSchema, ChangePasswordFormData } from '../schemas/changePasswordSchema';
 import { FormTextField } from '@/components/forms/FormTextField';
@@ -25,7 +25,7 @@ export const ChangePasswordSection: React.FC = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const {
-    register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -57,77 +57,98 @@ export const ChangePasswordSection: React.FC = () => {
         <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ maxWidth: 500 }}>
           <Grid container spacing={2.5}>
             <Grid item xs={12}>
-              <FormTextField
-                label="Current Password *"
-                type={showCurrent ? 'text' : 'password'}
-                {...register('current_password')}
-                errorMessage={errors.current_password?.message}
-                disabled={isPending}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Key fontSize="small" color="action" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => setShowCurrent(!showCurrent)}
-                        edge="end"
-                      >
-                        {showCurrent ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
+              <Controller
+                name="current_password"
+                control={control}
+                render={({ field }) => (
+                  <FormTextField
+                    {...field}
+                    value={field.value ?? ''}
+                    label="Current Password *"
+                    type={showCurrent ? 'text' : 'password'}
+                    errorMessage={errors.current_password?.message}
+                    disabled={isPending}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Key fontSize="small" color="action" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            size="small"
+                            onClick={() => setShowCurrent(!showCurrent)}
+                            edge="end"
+                          >
+                            {showCurrent ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                )}
               />
             </Grid>
 
             <Grid item xs={12}>
-              <FormTextField
-                label="New Password *"
-                type={showNew ? 'text' : 'password'}
-                {...register('password')}
-                errorMessage={errors.password?.message}
-                disabled={isPending}
-                helperText="Minimum 8 characters"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => setShowNew(!showNew)}
-                        edge="end"
-                      >
-                        {showNew ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
+              <Controller
+                name="password"
+                control={control}
+                render={({ field }) => (
+                  <FormTextField
+                    {...field}
+                    value={field.value ?? ''}
+                    label="New Password *"
+                    type={showNew ? 'text' : 'password'}
+                    errorMessage={errors.password?.message}
+                    disabled={isPending}
+                    helperText="Minimum 8 characters"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            size="small"
+                            onClick={() => setShowNew(!showNew)}
+                            edge="end"
+                          >
+                            {showNew ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                )}
               />
             </Grid>
 
             <Grid item xs={12}>
-              <FormTextField
-                label="Confirm New Password *"
-                type={showConfirm ? 'text' : 'password'}
-                {...register('password_confirmation')}
-                errorMessage={errors.password_confirmation?.message}
-                disabled={isPending}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => setShowConfirm(!showConfirm)}
-                        edge="end"
-                      >
-                        {showConfirm ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
+              <Controller
+                name="password_confirmation"
+                control={control}
+                render={({ field }) => (
+                  <FormTextField
+                    {...field}
+                    value={field.value ?? ''}
+                    label="Confirm New Password *"
+                    type={showConfirm ? 'text' : 'password'}
+                    errorMessage={errors.password_confirmation?.message}
+                    disabled={isPending}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            size="small"
+                            onClick={() => setShowConfirm(!showConfirm)}
+                            edge="end"
+                          >
+                            {showConfirm ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                )}
               />
             </Grid>
 

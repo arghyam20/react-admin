@@ -40,11 +40,9 @@ export const CategoryFormDialog: React.FC<CategoryFormDialogProps> = ({
   const isSubmitting = isCreating || isUpdating;
 
   const {
-    register,
     handleSubmit,
     reset,
     control,
-    formState: { errors },
   } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
@@ -58,33 +56,38 @@ export const CategoryFormDialog: React.FC<CategoryFormDialogProps> = ({
   });
 
   useEffect(() => {
-    if (categoryToEdit) {
-      reset({
-        name: categoryToEdit.name,
-        slug: categoryToEdit.slug,
-        parent_id: categoryToEdit.parent_id ?? null,
-        description: categoryToEdit.description || '',
-        status: categoryToEdit.status,
-        ordering: categoryToEdit.ordering || 0,
-      });
-      setSelectedFile(null);
-    } else {
-      reset({
-        name: '',
-        slug: '',
-        parent_id: null,
-        description: '',
-        status: 'active',
-        ordering: 0,
-      });
+    if (open) {
+      if (categoryToEdit) {
+        reset({
+          name: categoryToEdit.name || '',
+          slug: categoryToEdit.slug || '',
+          parent_id: categoryToEdit.parent_id !== undefined && categoryToEdit.parent_id !== null ? Number(categoryToEdit.parent_id) : null,
+          description: categoryToEdit.description || '',
+          status: categoryToEdit.status || 'active',
+          ordering: categoryToEdit.ordering !== undefined ? Number(categoryToEdit.ordering) : 0,
+        });
+      } else {
+        reset({
+          name: '',
+          slug: '',
+          parent_id: null,
+          description: '',
+          status: 'active',
+          ordering: 0,
+        });
+      }
       setSelectedFile(null);
     }
   }, [categoryToEdit, reset, open]);
 
   const onSubmit = (data: CategoryFormData) => {
     const payload = {
-      ...data,
-      parent_id: data.parent_id ? Number(data.parent_id) : null,
+      name: data.name.trim(),
+      slug: data.slug?.trim() || undefined,
+      parent_id: data.parent_id !== null && data.parent_id !== undefined ? Number(data.parent_id) : null,
+      description: data.description?.trim() || undefined,
+      status: data.status,
+      ordering: Number(data.ordering) || 0,
       image: selectedFile,
     };
 
@@ -102,7 +105,7 @@ export const CategoryFormDialog: React.FC<CategoryFormDialogProps> = ({
   const parentOptions = [
     { label: 'None (Root Category)', value: '' },
     ...(allCategoriesData?.data || [])
-      .filter((c) => !categoryToEdit || c.uuid !== categoryToEdit.uuid)
+      .filter((c) => !categoryToEdit || (c.uuid !== categoryToEdit.uuid && c.id !== categoryToEdit.id))
       .map((c) => ({
         label: `${c.depth > 0 ? '— '.repeat(c.depth) : ''}${c.name}`,
         value: c.id ?? c.uuid,
@@ -118,26 +121,40 @@ export const CategoryFormDialog: React.FC<CategoryFormDialogProps> = ({
         <DialogContent dividers>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <FormTextField
-                label="Category Name *"
-                {...register('name')}
-                errorMessage={errors.name?.message}
-                disabled={isSubmitting}
+              <Controller
+                name="name"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label="Category Name *"
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </Grid>
+
             <Grid item xs={12}>
-              <FormTextField
-                label="Slug (Optional - auto-generated if left blank)"
-                {...register('slug')}
-                errorMessage={errors.slug?.message}
-                disabled={isSubmitting}
+              <Controller
+                name="slug"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label="Slug (Optional - auto-generated if left blank)"
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </Grid>
+
             <Grid item xs={12}>
               <Controller
                 name="parent_id"
                 control={control}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormSelect
                     label="Parent Category"
                     value={field.value ?? ''}
@@ -146,47 +163,64 @@ export const CategoryFormDialog: React.FC<CategoryFormDialogProps> = ({
                       field.onChange(val === '' ? null : Number(val));
                     }}
                     options={parentOptions}
-                    errorMessage={errors.parent_id?.message}
+                    errorMessage={fieldState.error?.message}
                     disabled={isSubmitting}
                   />
                 )}
               />
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <Controller
                 name="status"
                 control={control}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormSelect
                     label="Status *"
                     value={field.value}
                     onChange={field.onChange}
                     options={CATEGORY_STATUSES.map((s) => ({ label: s.label, value: s.value }))}
-                    errorMessage={errors.status?.message}
+                    errorMessage={fieldState.error?.message}
                     disabled={isSubmitting}
                   />
                 )}
               />
             </Grid>
+
             <Grid item xs={12} sm={6}>
-              <FormTextField
-                label="Display Ordering"
-                type="number"
-                {...register('ordering')}
-                errorMessage={errors.ordering?.message}
-                disabled={isSubmitting}
+              <Controller
+                name="ordering"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label="Display Ordering"
+                    type="number"
+                    {...field}
+                    onChange={(e) => field.onChange(e.target.value === '' ? 0 : Number(e.target.value))}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </Grid>
+
             <Grid item xs={12}>
-              <FormTextField
-                label="Description"
-                multiline
-                rows={3}
-                {...register('description')}
-                errorMessage={errors.description?.message}
-                disabled={isSubmitting}
+              <Controller
+                name="description"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <FormTextField
+                    label="Description"
+                    multiline
+                    rows={3}
+                    {...field}
+                    errorMessage={fieldState.error?.message}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </Grid>
+
             <Grid item xs={12}>
               <FormImageUpload
                 label="Category Image (Optional)"
