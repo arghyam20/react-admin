@@ -1,0 +1,41 @@
+export const API_ENDPOINTS = {
+  auth: {
+    login: '/api/auth/login',
+    logout: '/api/auth/logout',
+    me: '/api/auth/me',
+    profile: '/api/auth/profile',
+    refresh: '/api/auth/refresh',
+  },
+  users: {
+    list: '/api/users/list',
+    create: '/api/users',
+    show: (uuid: string) => `/api/users/${uuid}`,
+    update: (uuid: string) => `/api/users/${uuid}`,
+    delete: (uuid: string) => `/api/users/${uuid}`,
+    toggleStatus: (uuid: string) => `/api/users/${uuid}/toggle-status`,
+    assignRoles: (uuid: string) => `/api/users/${uuid}/assign-roles`,
+  },
+  roles: {
+    list: '/api/roles/list',
+  },
+  categories: {
+    list: '/api/categories/list',
+    tree: '/api/categories/tree',
+    create: '/api/categories',
+    show: (uuid: string) => `/api/categories/${uuid}`,
+    update: (uuid: string) => `/api/categories/${uuid}`,
+    delete: (uuid: string) => `/api/categories/${uuid}`,
+    updateOrdering: (uuid: string) => `/api/categories/${uuid}/ordering`,
+  },
+  blogs: {
+    list: '/api/blogs/list',
+    create: '/api/blogs',
+    show: (uuid: string) => `/api/blogs/${uuid}`,
+    showBySlug: (slug: string) => `/api/blogs/slug/${slug}`,
+    update: (uuid: string) => `/api/blogs/${uuid}`,
+    delete: (uuid: string) => `/api/blogs/${uuid}`,
+    publish: (uuid: string) => `/api/blogs/${uuid}/publish`,
+    unpublish: (uuid: string) => `/api/blogs/${uuid}/unpublish`,
+    toggleFeatured: (uuid: string) => `/api/blogs/${uuid}/toggle-featured`,
+  },
+} as const;
