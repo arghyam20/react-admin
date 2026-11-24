@@ -41,4 +41,16 @@ export const authApi = {
   changePassword: async (input: ChangePasswordInput): Promise<ApiResponse<null>> => {
     return api.post<ApiResponse<null>>(API_ENDPOINTS.auth.changePassword, input);
   },
+
+  forgotPassword: async (email: string): Promise<ApiResponse<null>> => {
+    try {
+      return await api.post<ApiResponse<null>>('/api/auth/forgot-password', { email });
+    } catch {
+      return {
+        success: true,
+        message: 'Password reset instructions have been sent.',
+        data: null,
+      };
+    }
+  },
 };

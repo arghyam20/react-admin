@@ -99,10 +99,11 @@ export const EditProfileSection: React.FC = () => {
                       <FormTextField
                         {...field}
                         value={field.value ?? ''}
-                        label="Email Address *"
+                        label="Email Address (Non-editable)"
                         type="email"
                         errorMessage={errors.email?.message}
-                        disabled={isPending}
+                        disabled={true}
+                        helperText="Email address cannot be changed."
                       />
                     )}
                   />

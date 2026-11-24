@@ -96,6 +96,9 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
     if (isEditing && !payload.password) {
       delete (payload as { password?: string }).password;
     }
+    if (isEditing && userToEdit) {
+      payload.email = userToEdit.email;
+    }
 
     if (isEditing && userToEdit) {
       updateUser(
@@ -136,11 +139,12 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
                 control={control}
                 render={({ field, fieldState }) => (
                   <FormTextField
-                    label="Email Address *"
+                    label={isEditing ? 'Email Address (Non-editable)' : 'Email Address *'}
                     type="email"
                     {...field}
                     errorMessage={fieldState.error?.message}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isEditing}
+                    helperText={isEditing ? 'Email address cannot be changed once created.' : undefined}
                   />
                 )}
               />
