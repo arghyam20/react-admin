@@ -11,7 +11,13 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material';
-import { Add, EditOutlined, DeleteOutline, VisibilityOutlined, SubdirectoryArrowRight } from '@mui/icons-material';
+import {
+  Add,
+  EditOutlined,
+  DeleteOutline,
+  VisibilityOutlined,
+  SubdirectoryArrowRight,
+} from '@mui/icons-material';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DataTable } from '@/components/common/DataTable';
 import { SearchInput } from '@/components/common/SearchInput';
@@ -19,7 +25,7 @@ import { StatusChip } from '@/components/common/StatusChip';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { CategoryFormDialog } from '../components/CategoryFormDialog';
 import { CategoryDetailDialog } from '../components/CategoryDetailDialog';
-import { useCategoriesList, useDeleteCategory } from '../hooks/useCategories';
+import { useCategoriesList, useDeleteCategory, useUpdateCategory } from '../hooks/useCategories';
 import { CategoryItem } from '../types/category.types';
 import { TableColumn } from '@/types/common.types';
 import { formatDate } from '@/utils/formatters';
@@ -36,6 +42,7 @@ export const CategoriesListPage: React.FC = () => {
   const [categoryToEdit, setCategoryToEdit] = useState<CategoryItem | null>(null);
   const [categoryToView, setCategoryToView] = useState<CategoryItem | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<CategoryItem | null>(null);
+  const [categoryToToggleStatus, setCategoryToToggleStatus] = useState<CategoryItem | null>(null);
 
   const { data, isLoading } = useCategoriesList({
     page,
@@ -45,6 +52,7 @@ export const CategoriesListPage: React.FC = () => {
   });
 
   const { mutate: deleteCategory, isPending: isDeleting } = useDeleteCategory();
+  const { mutate: updateCategory, isPending: isUpdatingStatus } = useUpdateCategory();
 
   const handleOpenCreate = () => {
     setCategoryToEdit(null);
@@ -61,6 +69,18 @@ export const CategoriesListPage: React.FC = () => {
       deleteCategory(categoryToDelete.uuid, {
         onSuccess: () => setCategoryToDelete(null),
       });
+    }
+  };
+
+  const handleConfirmStatusToggle = () => {
+    if (categoryToToggleStatus) {
+      const nextStatus = categoryToToggleStatus.status === 'active' ? 'inactive' : 'active';
+      updateCategory(
+        { uuid: categoryToToggleStatus.uuid, input: { status: nextStatus } },
+        {
+          onSettled: () => setCategoryToToggleStatus(null),
+        }
+      );
     }
   };
 
@@ -102,7 +122,13 @@ export const CategoriesListPage: React.FC = () => {
       id: 'status',
       label: 'Status',
       minWidth: 100,
-      format: (val) => <StatusChip status={val as string} />,
+      format: (_, row) => (
+        <StatusChip
+          status={row.status}
+          onClick={() => setCategoryToToggleStatus(row)}
+          tooltip={`Click to ${row.status === 'active' ? 'deactivate' : 'activate'} category`}
+        />
+      ),
     },
     {
       id: 'created_at',
@@ -212,6 +238,19 @@ export const CategoriesListPage: React.FC = () => {
         isLoading={isDeleting}
         onConfirm={handleConfirmDelete}
         onClose={() => setCategoryToDelete(null)}
+      />
+
+      <ConfirmDialog
+        open={!!categoryToToggleStatus}
+        title={categoryToToggleStatus?.status === 'active' ? 'Deactivate Category' : 'Activate Category'}
+        message={`Are you sure you want to change status of category "${categoryToToggleStatus?.name}" to ${
+          categoryToToggleStatus?.status === 'active' ? 'Inactive' : 'Active'
+        }?`}
+        confirmText={categoryToToggleStatus?.status === 'active' ? 'Deactivate' : 'Activate'}
+        confirmColor={categoryToToggleStatus?.status === 'active' ? 'warning' : 'success'}
+        isLoading={isUpdatingStatus}
+        onConfirm={handleConfirmStatusToggle}
+        onClose={() => setCategoryToToggleStatus(null)}
       />
     </Box>
   );

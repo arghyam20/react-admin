@@ -12,6 +12,10 @@ import {
   Typography,
   Avatar,
   Chip,
+  Menu,
+  ListItemIcon,
+  ListItemText,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add,
@@ -20,10 +24,14 @@ import {
   VisibilityOutlined,
   Star,
   StarBorder,
-  Publish,
-  Unpublished,
   Image as ImageIcon,
+  FileDownload,
+  DescriptionOutlined,
+  TableChart,
+  PictureAsPdf,
+  KeyboardArrowDown,
 } from '@mui/icons-material';
+import { toast } from 'react-toastify';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DataTable } from '@/components/common/DataTable';
 import { SearchInput } from '@/components/common/SearchInput';
@@ -31,13 +39,16 @@ import { StatusChip } from '@/components/common/StatusChip';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { BlogFormDialog } from '../components/BlogFormDialog';
 import { BlogDetailDialog } from '../components/BlogDetailDialog';
+import { BlogStatusDialog } from '../components/BlogStatusDialog';
 import {
   useBlogsList,
   useDeleteBlog,
-  usePublishBlog,
+  useChangeBlogStatus,
   useToggleFeatured,
 } from '../hooks/useBlogs';
 import { useCategoriesList } from '@/features/categories/hooks/useCategories';
+import { blogApi } from '../api/blogApi';
+import { exportBlogsToCSV, exportBlogsToExcel, exportBlogsToPDF } from '@/utils/exportUtils';
 import { BlogItem } from '../types/blog.types';
 import { TableColumn } from '@/types/common.types';
 import { formatDate, getStorageUrl } from '@/utils/formatters';
@@ -55,6 +66,11 @@ export const BlogsListPage: React.FC = () => {
   const [blogToEdit, setBlogToEdit] = useState<BlogItem | null>(null);
   const [blogToView, setBlogToView] = useState<BlogItem | null>(null);
   const [blogToDelete, setBlogToDelete] = useState<BlogItem | null>(null);
+  const [blogToChangeStatus, setBlogToChangeStatus] = useState<BlogItem | null>(null);
+
+  // Export state
+  const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data, isLoading } = useBlogsList({
     page,
@@ -68,8 +84,87 @@ export const BlogsListPage: React.FC = () => {
 
   const { data: categoriesData } = useCategoriesList({ per_page: 100 });
   const { mutate: deleteBlog, isPending: isDeleting } = useDeleteBlog();
-  const { mutate: changePublishStatus } = usePublishBlog();
+  const { mutate: changeStatus, isPending: isChangingStatus } = useChangeBlogStatus();
   const { mutate: toggleFeatured } = useToggleFeatured();
+
+  const handleOpenExportMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setExportAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseExportMenu = () => {
+    setExportAnchorEl(null);
+  };
+
+  const getExportBlogs = async (): Promise<BlogItem[]> => {
+    const total = data?.meta?.total ?? 0;
+    if (!total || total <= (data?.data?.length ?? 0)) {
+      return data?.data ?? [];
+    }
+
+    try {
+      setIsExporting(true);
+      const res = await blogApi.getBlogs({
+        page: 1,
+        per_page: Math.min(total, 1000),
+        search: search || undefined,
+        status: statusFilter || undefined,
+        category_id: categoryFilter !== '' ? Number(categoryFilter) : undefined,
+        sort_by: 'created_at',
+        sort_order: 'desc',
+      });
+      return res.data;
+    } catch {
+      toast.warning('Exporting currently visible articles');
+      return data?.data ?? [];
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    handleCloseExportMenu();
+    try {
+      const blogs = await getExportBlogs();
+      if (!blogs.length) {
+        toast.warning('No blog data to export');
+        return;
+      }
+      exportBlogsToExcel(blogs);
+      toast.success(`Exported ${blogs.length} article${blogs.length === 1 ? '' : 's'} to Excel (.xlsx)`);
+    } catch {
+      toast.error('Failed to export Excel spreadsheet');
+    }
+  };
+
+  const handleExportCSV = async () => {
+    handleCloseExportMenu();
+    try {
+      const blogs = await getExportBlogs();
+      if (!blogs.length) {
+        toast.warning('No blog data to export');
+        return;
+      }
+      exportBlogsToCSV(blogs);
+      toast.success(`Exported ${blogs.length} article${blogs.length === 1 ? '' : 's'} to CSV`);
+    } catch {
+      toast.error('Failed to export CSV');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    handleCloseExportMenu();
+    try {
+      const blogs = await getExportBlogs();
+      if (!blogs.length) {
+        toast.warning('No blog data to export');
+        return;
+      }
+      exportBlogsToPDF(blogs);
+      toast.success(`Exported ${blogs.length} article${blogs.length === 1 ? '' : 's'} to PDF`);
+    } catch {
+      toast.error('Failed to export PDF');
+    }
+  };
 
   const handleOpenCreate = () => {
     setBlogToEdit(null);
@@ -86,6 +181,15 @@ export const BlogsListPage: React.FC = () => {
       deleteBlog(blogToDelete.uuid, {
         onSuccess: () => setBlogToDelete(null),
       });
+    }
+  };
+
+  const handleConfirmStatusChange = (newStatus: 'draft' | 'published' | 'archived') => {
+    if (blogToChangeStatus) {
+      changeStatus(
+        { uuid: blogToChangeStatus.uuid, status: newStatus },
+        { onSettled: () => setBlogToChangeStatus(null) }
+      );
     }
   };
 
@@ -141,7 +245,13 @@ export const BlogsListPage: React.FC = () => {
       id: 'status',
       label: 'Status',
       minWidth: 100,
-      format: (val) => <StatusChip status={val as string} />,
+      format: (_, row) => (
+        <StatusChip
+          status={row.status}
+          onClick={() => setBlogToChangeStatus(row)}
+          tooltip="Click to change status (Draft / Published / Archived)"
+        />
+      ),
     },
     {
       id: 'is_featured',
@@ -165,19 +275,10 @@ export const BlogsListPage: React.FC = () => {
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 170,
+      minWidth: 130,
       align: 'right',
       format: (_, row) => (
         <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-          <Tooltip title={row.status === 'published' ? 'Unpublish' : 'Publish'}>
-            <IconButton
-              size="small"
-              color={row.status === 'published' ? 'warning' : 'success'}
-              onClick={() => changePublishStatus({ uuid: row.uuid, publish: row.status !== 'published' })}
-            >
-              {row.status === 'published' ? <Unpublished fontSize="small" /> : <Publish fontSize="small" />}
-            </IconButton>
-          </Tooltip>
           <Tooltip title="Preview">
             <IconButton size="small" color="primary" onClick={() => setBlogToView(row)}>
               <VisibilityOutlined fontSize="small" />
@@ -204,9 +305,21 @@ export const BlogsListPage: React.FC = () => {
         title="Blog Management"
         subtitle="Create, edit, organize, and publish rich blog articles"
         action={
-          <Button variant="contained" startIcon={<Add />} onClick={handleOpenCreate}>
-            Create Post
-          </Button>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={isExporting ? <CircularProgress size={16} color="inherit" /> : <FileDownload />}
+              endIcon={<KeyboardArrowDown />}
+              onClick={handleOpenExportMenu}
+              disabled={isLoading || isExporting || !data?.data?.length}
+            >
+              Export
+            </Button>
+            <Button variant="contained" startIcon={<Add />} onClick={handleOpenCreate}>
+              Create Post
+            </Button>
+          </Stack>
         }
       >
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 1, flexWrap: 'wrap' }}>
@@ -296,6 +409,46 @@ export const BlogsListPage: React.FC = () => {
         onConfirm={handleConfirmDelete}
         onClose={() => setBlogToDelete(null)}
       />
+
+      <BlogStatusDialog
+        open={!!blogToChangeStatus}
+        blog={blogToChangeStatus}
+        isLoading={isChangingStatus}
+        onConfirm={handleConfirmStatusChange}
+        onClose={() => setBlogToChangeStatus(null)}
+      />
+
+      <Menu
+        anchorEl={exportAnchorEl}
+        open={Boolean(exportAnchorEl)}
+        onClose={handleCloseExportMenu}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        slotProps={{
+          paper: {
+            sx: { minWidth: 230, borderRadius: 2, boxShadow: '0 6px 24px rgba(0,0,0,0.12)' },
+          },
+        }}
+      >
+        <MenuItem onClick={handleExportExcel}>
+          <ListItemIcon>
+            <DescriptionOutlined fontSize="small" sx={{ color: '#16a34a' }} />
+          </ListItemIcon>
+          <ListItemText primary="Export as Excel" secondary="Spreadsheet (.xlsx / .xls)" />
+        </MenuItem>
+        <MenuItem onClick={handleExportCSV}>
+          <ListItemIcon>
+            <TableChart fontSize="small" color="primary" />
+          </ListItemIcon>
+          <ListItemText primary="Export as CSV" secondary="Comma-separated values (.csv)" />
+        </MenuItem>
+        <MenuItem onClick={handleExportPDF}>
+          <ListItemIcon>
+            <PictureAsPdf fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText primary="Export as PDF" secondary="Printable document (.pdf)" />
+        </MenuItem>
+      </Menu>
     </Box>
   );
 };

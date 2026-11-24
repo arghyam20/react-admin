@@ -10,6 +10,7 @@ import {
   Typography,
   Divider,
   ListItemIcon,
+  Tooltip,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -23,11 +24,12 @@ import { useLogout } from '@/features/auth/hooks/useAuth';
 import { getStorageUrl } from '@/utils/formatters';
 
 interface HeaderProps {
-  onMobileDrawerToggle: () => void;
+  onToggleSidebar: () => void;
   drawerWidth: number;
+  isCollapsed?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onMobileDrawerToggle, drawerWidth }) => {
+export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, drawerWidth, isCollapsed = false }) => {
   const user = useAppSelector((state) => state.auth.user);
   const { mutate: logout, isPending } = useLogout();
   const navigate = useNavigate();
@@ -65,21 +67,33 @@ export const Header: React.FC<HeaderProps> = ({ onMobileDrawerToggle, drawerWidt
         bgcolor: '#ffffff',
         borderBottom: '1px solid #e2e8f0',
         color: 'text.primary',
+        transition: (theme) =>
+          theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', minHeight: 64 }}>
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          edge="start"
-          onClick={onMobileDrawerToggle}
-          sx={{ mr: 2, display: { md: 'none' } }}
-        >
-          <MenuIcon />
-        </IconButton>
-
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="h6" fontWeight={600} color="text.primary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+          <Tooltip title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            <IconButton
+              color="inherit"
+              aria-label="toggle sidebar"
+              edge="start"
+              onClick={onToggleSidebar}
+              sx={{ mr: 1.5 }}
+            >
+              <MenuIcon />
+            </IconButton>
+          </Tooltip>
+
+          <Typography
+            variant="h6"
+            fontWeight={600}
+            color="text.primary"
+            sx={{ display: { xs: 'none', sm: 'block' } }}
+          >
             Management Portal
           </Typography>
         </Box>

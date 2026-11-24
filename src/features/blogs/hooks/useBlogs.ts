@@ -66,6 +66,43 @@ export const useDeleteBlog = () => {
   });
 };
 
+export const useChangeBlogStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      uuid,
+      status,
+    }: {
+      uuid: string;
+      status: 'draft' | 'published' | 'archived';
+    }) => {
+      if (status === 'published') {
+        try {
+          return await blogApi.publishBlog(uuid);
+        } catch {
+          return await blogApi.updateBlog(uuid, { status: 'published' });
+        }
+      } else if (status === 'draft') {
+        try {
+          return await blogApi.unpublishBlog(uuid);
+        } catch {
+          return await blogApi.updateBlog(uuid, { status: 'draft' });
+        }
+      } else {
+        return await blogApi.updateBlog(uuid, { status: 'archived' });
+      }
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['blogs'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success(res.message || 'Blog status updated successfully');
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to update blog status'));
+    },
+  });
+};
+
 export const usePublishBlog = () => {
   const queryClient = useQueryClient();
   return useMutation({

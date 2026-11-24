@@ -53,18 +53,30 @@ export const theme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         head: {
-          fontWeight: 600,
+          fontWeight: 700,
           backgroundColor: '#f8fafc',
-          color: '#334155',
-          fontSize: '0.8125rem',
-          borderBottom: '1px solid #e2e8f0',
-          padding: '12px 16px',
+          color: '#475569',
+          fontSize: '0.75rem',
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
+          borderBottom: '1.5px solid #e2e8f0',
+          padding: '14px 16px',
         },
         body: {
           fontSize: '0.875rem',
           color: '#1e293b',
           borderBottom: '1px solid #f1f5f9',
           padding: '14px 16px',
+        },
+      },
+    },
+    MuiTableRow: {
+      styleOverrides: {
+        root: {
+          transition: 'background-color 0.15s ease',
+          '&.MuiTableRow-hover:hover': {
+            backgroundColor: '#f8fafc',
+          },
         },
       },
     },

@@ -311,7 +311,7 @@ npm run dev
 ```
 
 The application will launch at:
-`http://localhost:3000`
+`http://localhost:1500`
 
 ---
 

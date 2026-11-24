@@ -15,7 +15,7 @@ interface ConfirmDialogProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
-  confirmColor?: 'error' | 'primary' | 'warning';
+  confirmColor?: 'error' | 'primary' | 'warning' | 'success' | 'info';
   isLoading?: boolean;
   onConfirm: () => void;
   onClose: () => void;

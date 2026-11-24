@@ -10,6 +10,7 @@ import {
   Toolbar,
   Typography,
   Divider,
+  Tooltip,
 } from '@mui/material';
 import {
   DashboardOutlined,
@@ -24,6 +25,7 @@ interface SidebarProps {
   drawerWidth: number;
   mobileOpen: boolean;
   onMobileClose: () => void;
+  isCollapsed?: boolean;
 }
 
 interface MenuItem {
@@ -32,7 +34,6 @@ interface MenuItem {
   icon: React.ReactNode;
 }
 
-// Sidebar menu contains ONLY: Dashboard, Users, Categories, Blogs
 const menuItems: MenuItem[] = [
   { text: 'Dashboard', path: '/', icon: <DashboardOutlined /> },
   { text: 'Users', path: '/users', icon: <PeopleAltOutlined /> },
@@ -44,6 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   drawerWidth,
   mobileOpen,
   onMobileClose,
+  isCollapsed = false,
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -64,7 +66,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const drawerContent = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Toolbar sx={{ px: 3, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Toolbar
+        sx={{
+          px: isCollapsed ? 1.5 : 3,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: isCollapsed ? 'center' : 'flex-start',
+          gap: 1.5,
+          minHeight: '64px !important',
+        }}
+      >
         <Box
           sx={{
             display: 'flex',
@@ -75,36 +86,55 @@ export const Sidebar: React.FC<SidebarProps> = ({
             borderRadius: 2,
             bgcolor: 'primary.main',
             color: '#ffffff',
+            flexShrink: 0,
           }}
         >
           <AdminPanelSettings fontSize="small" />
         </Box>
-        <Typography variant="h6" fontWeight={700} color="text.primary" sx={{ letterSpacing: '-0.3px' }}>
-          Admin Panel
-        </Typography>
+        {!isCollapsed && (
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            color="text.primary"
+            sx={{ letterSpacing: '-0.3px', whiteSpace: 'nowrap' }}
+          >
+            Admin Panel
+          </Typography>
+        )}
       </Toolbar>
       <Divider />
 
-      <Box sx={{ p: 2, flex: 1 }}>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ px: 1.5, py: 1, display: 'block', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.6875rem' }}
-        >
-          Navigation
-        </Typography>
+      <Box sx={{ p: isCollapsed ? 1 : 2, flex: 1 }}>
+        {!isCollapsed && (
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              px: 1.5,
+              py: 1,
+              display: 'block',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              fontSize: '0.6875rem',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Navigation
+          </Typography>
+        )}
         <List disablePadding>
           {menuItems.map((item) => {
             const selected = isSelected(item.path);
-            return (
-              <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+            const buttonContent = (
+              <ListItem disablePadding sx={{ mb: 0.5 }}>
                 <ListItemButton
                   selected={selected}
                   onClick={() => handleNavigate(item.path)}
                   sx={{
                     borderRadius: 2,
                     py: 1,
-                    px: 1.5,
+                    px: isCollapsed ? 1 : 1.5,
+                    justifyContent: isCollapsed ? 'center' : 'initial',
                     color: selected ? 'primary.main' : 'text.secondary',
                     bgcolor: selected ? 'rgba(37, 99, 235, 0.08)' : 'transparent',
                     '&.Mui-selected': {
@@ -120,31 +150,47 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <ListItemIcon
                     sx={{
-                      minWidth: 36,
+                      minWidth: isCollapsed ? 0 : 36,
+                      justifyContent: 'center',
                       color: selected ? 'primary.main' : 'text.secondary',
                     }}
                   >
                     {item.icon}
                   </ListItemIcon>
-                  <ListItemText
-                    primary={item.text}
-                    primaryTypographyProps={{
-                      fontSize: '0.875rem',
-                      fontWeight: selected ? 600 : 500,
-                    }}
-                  />
+                  {!isCollapsed && (
+                    <ListItemText
+                      primary={item.text}
+                      primaryTypographyProps={{
+                        fontSize: '0.875rem',
+                        fontWeight: selected ? 600 : 500,
+                        whiteSpace: 'nowrap',
+                      }}
+                    />
+                  )}
                 </ListItemButton>
               </ListItem>
             );
+
+            if (isCollapsed) {
+              return (
+                <Tooltip key={item.text} title={item.text} placement="right" arrow>
+                  {buttonContent}
+                </Tooltip>
+              );
+            }
+
+            return <React.Fragment key={item.text}>{buttonContent}</React.Fragment>;
           })}
         </List>
       </Box>
 
-      <Box sx={{ p: 2, borderTop: '1px solid #e2e8f0' }}>
-        <Typography variant="caption" color="text.secondary" display="block" align="center">
-          CMS Backend v1.0
-        </Typography>
-      </Box>
+      {!isCollapsed && (
+        <Box sx={{ p: 2, borderTop: '1px solid #e2e8f0' }}>
+          <Typography variant="caption" color="text.secondary" display="block" align="center" noWrap>
+            CMS Backend v1.0
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 
@@ -160,7 +206,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           display: { xs: 'block', md: 'none' },
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
-            width: drawerWidth,
+            width: 260,
             bgcolor: '#ffffff',
             borderRight: '1px solid #e2e8f0',
           },
@@ -169,7 +215,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {drawerContent}
       </Drawer>
 
-      {/* Desktop permanent drawer */}
+      {/* Desktop collapsible permanent drawer */}
       <Drawer
         variant="permanent"
         open
@@ -180,6 +226,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             width: drawerWidth,
             bgcolor: '#ffffff',
             borderRight: '1px solid #e2e8f0',
+            overflowX: 'hidden',
+            transition: (theme) =>
+              theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
           },
         }}
       >
